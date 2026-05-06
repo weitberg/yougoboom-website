@@ -85,35 +85,42 @@
               drop-shadow(0 0 8px rgba(0,0,0,0.8));
     }
 
-    /* Flame flicker — outer orange body */
+    /* Flame — slow organic flicker matching the iOS app's sine-wave approach.
+       Outer body: ~0.9s main period. Inner core: ~0.55s. Spark: ~0.75s.
+       Multiple keyframe stops at irregular percentages prevent the mechanical
+       back-and-forth look. transform-origin set to flame base so it sways
+       from the wick tip rather than its own centre. */
     #flame-outer {
-      animation: flicker-outer 0.11s ease-in-out infinite alternate;
-      transform-origin: 148px 47px;   /* base of flame */
-    }
-    /* Flame flicker — inner bright core */
-    #flame-inner {
-      animation: flicker-inner 0.08s ease-in-out infinite alternate;
+      animation: flicker-outer 1.85s ease-in-out infinite;
       transform-origin: 148px 47px;
     }
-    /* Bright spark tip */
+    #flame-inner {
+      animation: flicker-inner 1.15s ease-in-out infinite;
+      transform-origin: 148px 47px;
+    }
     #flame-spark {
-      animation: spark 0.07s ease-in-out infinite alternate;
+      animation: spark 0.75s ease-in-out infinite alternate;
     }
 
     @keyframes flicker-outer {
-      0%   { transform: scaleX(1.00) scaleY(1.00) rotate(-2deg); opacity: 0.90; }
-      25%  { transform: scaleX(0.85) scaleY(1.14) rotate( 3deg); opacity: 1.00; }
-      60%  { transform: scaleX(1.10) scaleY(0.88) rotate(-4deg); opacity: 0.86; }
-      100% { transform: scaleX(0.92) scaleY(1.06) rotate( 2deg); opacity: 0.94; }
+      0%   { transform: scaleX(1.00) scaleY(1.00) rotate(-1deg); opacity: 0.88; }
+      18%  { transform: scaleX(0.88) scaleY(1.10) rotate( 2deg); opacity: 0.96; }
+      35%  { transform: scaleX(1.06) scaleY(0.93) rotate(-2deg); opacity: 0.84; }
+      52%  { transform: scaleX(0.92) scaleY(1.08) rotate( 3deg); opacity: 1.00; }
+      70%  { transform: scaleX(1.04) scaleY(0.96) rotate(-1deg); opacity: 0.90; }
+      85%  { transform: scaleX(0.94) scaleY(1.05) rotate( 2deg); opacity: 0.94; }
+      100% { transform: scaleX(1.00) scaleY(1.00) rotate(-1deg); opacity: 0.88; }
     }
     @keyframes flicker-inner {
-      0%   { transform: scaleX(1.00) scaleY(0.95) rotate( 2deg); opacity: 0.88; }
-      50%  { transform: scaleX(0.80) scaleY(1.18) rotate(-3deg); opacity: 1.00; }
-      100% { transform: scaleX(1.08) scaleY(0.90) rotate( 1deg); opacity: 0.84; }
+      0%   { transform: scaleX(1.00) scaleY(1.00) rotate( 1deg); opacity: 0.90; }
+      22%  { transform: scaleX(0.82) scaleY(1.14) rotate(-2deg); opacity: 1.00; }
+      47%  { transform: scaleX(1.08) scaleY(0.90) rotate( 2deg); opacity: 0.82; }
+      68%  { transform: scaleX(0.88) scaleY(1.10) rotate(-1deg); opacity: 0.96; }
+      100% { transform: scaleX(1.00) scaleY(1.00) rotate( 1deg); opacity: 0.90; }
     }
     @keyframes spark {
-      0%   { opacity: 1.0; transform: scale(1.0); }
-      100% { opacity: 0.5; transform: scale(0.75); }
+      0%   { opacity: 0.95; transform: scale(1.00); }
+      100% { opacity: 0.45; transform: scale(0.70); }
     }
 
     /* ── TITLE ────────────────────────────────────────────────────────────── */
