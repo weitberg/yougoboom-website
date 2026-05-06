@@ -86,20 +86,18 @@
     }
 
     /* Flame — slow organic flicker matching the iOS app's sine-wave approach.
-       Outer body: ~0.9s main period. Inner core: ~0.55s. Spark: ~0.75s.
-       Multiple keyframe stops at irregular percentages prevent the mechanical
-       back-and-forth look. transform-origin set to flame base so it sways
-       from the wick tip rather than its own centre. */
+       Outer: ~0.9s period. Inner: ~0.55s. Both pivot around the wick tip (205,45)
+       so they sway from the base like a real flame, not from their own centres.
+       No spark animation — the spark dot is static just like in the app. */
     #flame-outer {
       animation: flicker-outer 1.85s ease-in-out infinite;
-      transform-origin: 148px 47px;
+      transform-box: view-box;
+      transform-origin: 205px 45px;
     }
     #flame-inner {
       animation: flicker-inner 1.15s ease-in-out infinite;
-      transform-origin: 148px 47px;
-    }
-    #flame-spark {
-      animation: spark 0.75s ease-in-out infinite alternate;
+      transform-box: view-box;
+      transform-origin: 205px 45px;
     }
 
     @keyframes flicker-outer {
@@ -117,10 +115,6 @@
       47%  { transform: scaleX(1.08) scaleY(0.90) rotate( 2deg); opacity: 0.82; }
       68%  { transform: scaleX(0.88) scaleY(1.10) rotate(-1deg); opacity: 0.96; }
       100% { transform: scaleX(1.00) scaleY(1.00) rotate( 1deg); opacity: 0.90; }
-    }
-    @keyframes spark {
-      0%   { opacity: 0.95; transform: scale(1.00); }
-      100% { opacity: 0.45; transform: scale(0.70); }
     }
 
     /* ── TITLE ────────────────────────────────────────────────────────────── */
@@ -197,22 +191,49 @@
   <div class="bomb-wrap">
     <div class="bomb-aura"></div>
 
-    <svg class="bomb-svg" viewBox="0 0 240 275" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <!--
+      Bomb coordinates derived directly from TitleScene.swift drawBombSphere/drawFuseRope.
+      bombR=100, bomb center=(150,190) in a 300×310 SVG viewport (y-down).
+
+      Fuse cubic bezier control points (from source, scaled to bombR=100):
+        P0 = fuseStart = (150, 80)   [top of stem, 2px overlap into bomb top]
+        P1 = cp1       = (157, 75)   [first control]
+        P2 = cp2       = (190, 82)   [second control]
+        P3 = fuseEnd   = (205, 45)   [wick tip = flame base]
+
+      Flame centres (from source, converted y-up→y-down):
+        outer: (205, 37)   [wickY - 8]
+        inner: (205, 40)   [wickY - 5]
+        spark: (205, 45)   [wickY, static — no animation]
+
+      Tick marks: 9 lines perpendicular to bezier at t=0.1…0.9, half-length=2.4
+    -->
+    <svg class="bomb-svg" viewBox="0 0 300 310" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <defs>
-        <!-- Bomb body gradient: lighter at top-left highlight, dark at bottom -->
-        <radialGradient id="bodyGrad" cx="36%" cy="30%" r="66%">
-          <stop offset="0%"   stop-color="#3d3d3d"/>
-          <stop offset="55%"  stop-color="#1c1c1c"/>
-          <stop offset="100%" stop-color="#0a0a0a"/>
+        <!-- Body: radial from bright highlight focal point → dark edges.
+             Exact source colors: #686868 → #242428 → #111115 at [0, 0.55, 1.0].
+             Focal point offset (-0.28r, -0.28r) from centre = (122, 162). -->
+        <radialGradient id="bodyGrad"
+          cx="150" cy="190" r="100"
+          fx="122" fy="162"
+          gradientUnits="userSpaceOnUse">
+          <stop offset="0%"   stop-color="#686868"/>
+          <stop offset="55%"  stop-color="#242428"/>
+          <stop offset="100%" stop-color="#111115"/>
         </radialGradient>
-        <!-- Soft specular highlight -->
-        <radialGradient id="hlGrad" cx="30%" cy="25%" r="60%">
-          <stop offset="0%"   stop-color="rgba(255,255,255,0.20)"/>
-          <stop offset="100%" stop-color="rgba(255,255,255,0.00)"/>
+
+        <!-- Specular highlight spot: soft white circle at (-0.30r, -0.28r) from centre -->
+        <radialGradient id="hlGrad"
+          cx="120" cy="162" r="30"
+          gradientUnits="userSpaceOnUse">
+          <stop offset="0%"   stop-color="white" stop-opacity="0.18"/>
+          <stop offset="80%"  stop-color="white" stop-opacity="0.06"/>
+          <stop offset="100%" stop-color="white" stop-opacity="0"/>
         </radialGradient>
-        <!-- Flame glow filter -->
-        <filter id="fg" x="-80%" y="-80%" width="260%" height="260%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/>
+
+        <!-- Flame glow: gaussian blur layer under the crisp ellipse -->
+        <filter id="fg" x="-120%" y="-120%" width="340%" height="340%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/>
           <feMerge>
             <feMergeNode in="b"/>
             <feMergeNode in="SourceGraphic"/>
@@ -220,38 +241,69 @@
         </filter>
       </defs>
 
-      <!-- Wick: curves up and slightly left from the 1-o'clock position -->
-      <path d="M 143 102  Q 168 70  152 40"
-            stroke="#8a7b5a" stroke-width="3.5"
-            fill="none" stroke-linecap="round"/>
+      <!-- ── Fuse rope (drawn before bomb body so body clips over stem base) ── -->
 
-      <!-- Flame outer (orange, flickering) -->
+      <!-- Shadow stroke — offset slightly down-right -->
+      <path d="M 151.2,81.5 C 158.2,76.5 191.2,83.5 206.2,46.5"
+            stroke="rgba(0,0,0,0.30)" stroke-width="5" stroke-linecap="round" fill="none"/>
+
+      <!-- Core rope: dark brown -->
+      <path id="fuse" d="M 150,80 C 157,75 190,82 205,45"
+            stroke="#5c3410" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+      <!-- Mid-tone strand -->
+      <path d="M 150,80 C 157,75 190,82 205,45"
+            stroke="#8a5422" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+
+      <!-- Highlight strand (shifted left 0.9px to simulate twist) -->
+      <path d="M 149.1,80 C 156.1,75 189.1,82 204.1,45"
+            stroke="#c8823a" stroke-width="1" stroke-linecap="round" fill="none"/>
+
+      <!-- Twist tick marks — 9 lines perpendicular to bezier at t=0.1…0.9.
+           Positions and normals computed from the cubic bezier formula. -->
+      <g stroke="#9a6830" stroke-width="0.9" stroke-linecap="round" opacity="0.75">
+        <line x1="152.3" y1="76.5" x2="153.5" y2="81.1"/>  <!-- t=0.1 -->
+        <line x1="156.6" y1="75.6" x2="157.4" y2="80.4"/>  <!-- t=0.2 -->
+        <line x1="161.6" y1="74.8" x2="162.4" y2="79.6"/>  <!-- t=0.3 -->
+        <line x1="167.6" y1="73.9" x2="168.6" y2="78.5"/>  <!-- t=0.4 -->
+        <line x1="173.8" y1="72.2" x2="175.2" y2="76.8"/>  <!-- t=0.5 -->
+        <line x1="179.5" y1="69.7" x2="181.5" y2="74.1"/>  <!-- t=0.6 -->
+        <line x1="186.4" y1="66.0" x2="189.2" y2="69.8"/>  <!-- t=0.7 -->
+        <line x1="192.5" y1="60.7" x2="195.9" y2="64.1"/>  <!-- t=0.8 -->
+        <line x1="197.9" y1="53.5" x2="202.1" y2="56.1"/>  <!-- t=0.9 -->
+      </g>
+
+      <!-- ── Bomb body ──────────────────────────────────────────────────────── -->
+      <circle cx="150" cy="190" r="100" fill="url(#bodyGrad)"/>
+
+      <!-- Rim highlight: UIColor(white:0.35, alpha:0.5) = rgb(89,89,89) @ 50% -->
+      <circle cx="150" cy="190" r="99"
+              fill="none"
+              stroke="rgb(89,89,89)" stroke-opacity="0.50" stroke-width="1.5"/>
+
+      <!-- Specular highlight spot (top-left quadrant) -->
+      <circle cx="120" cy="162" r="30" fill="url(#hlGrad)"/>
+
+      <!-- ── Fuse stem (rounded rect at top of bomb, drawn over body) ──────── -->
+      <!-- stemW=8, stemH=13, centred on bomb top, 2px overlap into sphere -->
+      <rect x="146" y="79" width="8" height="13" rx="2" fill="#4a3a2a"/>
+
+      <!-- ── Flame (animated, pivots around wick tip at 205,45) ────────────── -->
+
+      <!-- Outer flame: #ff6600 @ 85%, ellipse 8×18 → rx=4, ry=9, centre=(205,37) -->
       <g id="flame-outer" filter="url(#fg)">
-        <ellipse cx="148" cy="35" rx="10" ry="16"
-                 fill="rgba(255,130,0,0.88)"/>
+        <ellipse cx="205" cy="37" rx="4" ry="9"
+                 fill="#ff6600" fill-opacity="0.85"/>
       </g>
 
-      <!-- Flame inner (bright yellow-white core) -->
+      <!-- Inner flame: #ffee44 @ 95%, ellipse 4×10 → rx=2, ry=5, centre=(205,40) -->
       <g id="flame-inner" filter="url(#fg)">
-        <ellipse cx="148" cy="39" rx="5.5" ry="9"
-                 fill="rgba(255,245,140,0.96)"/>
+        <ellipse cx="205" cy="40" rx="2" ry="5"
+                 fill="#ffee44" fill-opacity="0.95"/>
       </g>
 
-      <!-- Spark tip (tiny bright dot at top of flame) -->
-      <circle id="flame-spark" cx="148" cy="22" r="2.8"
-              fill="rgba(255,255,220,0.95)"/>
-
-      <!-- Bomb body -->
-      <circle cx="114" cy="162" r="90" fill="url(#bodyGrad)"/>
-
-      <!-- Specular highlight (top-left) -->
-      <ellipse cx="86" cy="130" rx="34" ry="22"
-               fill="url(#hlGrad)"
-               transform="rotate(-28 86 130)"/>
-
-      <!-- Subtle bottom rim light (purple-toned, like the game's grid glow) -->
-      <ellipse cx="126" cy="240" rx="44" ry="7"
-               fill="rgba(90,50,140,0.22)"/>
+      <!-- Spark: static white dot at wick tip — no animation (matches the app) -->
+      <circle cx="205" cy="45" r="2.5" fill="white"/>
     </svg>
   </div>
 
