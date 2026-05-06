@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="You Go Boom — a chain-reaction trap-building puzzle game. Coming soon to iOS.">
+  <meta property="og:title" content="You Go Boom">
+  <meta property="og:description" content="A chain-reaction trap-building puzzle game. Coming soon to iOS.">
+  <meta property="og:type" content="website">
+  <title>You Go Boom</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: #16121f;
+      color: #e8e0f0;
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Vignette — matches the game's radial dark-edge effect */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 48%,
+        transparent 25%,
+        rgba(0,0,0,0.28) 60%,
+        rgba(0,0,0,0.55) 100%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ── HERO ─────────────────────────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 4rem 1.5rem 5rem;
+      text-align: center;
+      z-index: 2;
+    }
+
+    /* ── BOMB ─────────────────────────────────────────────────────────────── */
+    .bomb-wrap {
+      position: relative;
+      width: min(300px, 62vw);
+      margin-bottom: 2.2rem;
+    }
+
+    /* Red pulsing glow behind the bomb — matches game's CIBloom-style aura */
+    .bomb-aura {
+      position: absolute;
+      inset: -18%;
+      border-radius: 50%;
+      background: radial-gradient(circle,
+        rgba(204,51,0,0.72) 0%,
+        rgba(160,30,0,0.38) 40%,
+        transparent 70%);
+      filter: blur(22px);
+      animation: aura-pulse 2.8s ease-in-out infinite;
+      z-index: 0;
+    }
+
+    @keyframes aura-pulse {
+      0%, 100% { opacity: 0.72; transform: scale(1.00); }
+      50%       { opacity: 1.00; transform: scale(1.10); }
+    }
+
+    .bomb-svg {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: auto;
+      filter: drop-shadow(0 6px 32px rgba(180,60,0,0.45))
+              drop-shadow(0 0 8px rgba(0,0,0,0.8));
+    }
+
+    /* Flame flicker — outer orange body */
+    #flame-outer {
+      animation: flicker-outer 0.11s ease-in-out infinite alternate;
+      transform-origin: 148px 47px;   /* base of flame */
+    }
+    /* Flame flicker — inner bright core */
+    #flame-inner {
+      animation: flicker-inner 0.08s ease-in-out infinite alternate;
+      transform-origin: 148px 47px;
+    }
+    /* Bright spark tip */
+    #flame-spark {
+      animation: spark 0.07s ease-in-out infinite alternate;
+    }
+
+    @keyframes flicker-outer {
+      0%   { transform: scaleX(1.00) scaleY(1.00) rotate(-2deg); opacity: 0.90; }
+      25%  { transform: scaleX(0.85) scaleY(1.14) rotate( 3deg); opacity: 1.00; }
+      60%  { transform: scaleX(1.10) scaleY(0.88) rotate(-4deg); opacity: 0.86; }
+      100% { transform: scaleX(0.92) scaleY(1.06) rotate( 2deg); opacity: 0.94; }
+    }
+    @keyframes flicker-inner {
+      0%   { transform: scaleX(1.00) scaleY(0.95) rotate( 2deg); opacity: 0.88; }
+      50%  { transform: scaleX(0.80) scaleY(1.18) rotate(-3deg); opacity: 1.00; }
+      100% { transform: scaleX(1.08) scaleY(0.90) rotate( 1deg); opacity: 0.84; }
+    }
+    @keyframes spark {
+      0%   { opacity: 1.0; transform: scale(1.0); }
+      100% { opacity: 0.5; transform: scale(0.75); }
+    }
+
+    /* ── TITLE ────────────────────────────────────────────────────────────── */
+    .game-title {
+      font-family: 'Bebas Neue', 'Impact', 'Arial Black', sans-serif;
+      font-size: clamp(3.8rem, 14vw, 8.5rem);
+      letter-spacing: 0.045em;
+      color: #ffbb22;
+      line-height: 1;
+      text-shadow:
+        0 0 18px rgba(255,170,0,0.70),
+        0 0 55px rgba(255,100,0,0.32),
+        0 2px 6px rgba(0,0,0,0.70);
+      margin-bottom: 0.25rem;
+    }
+
+    .game-subtitle {
+      font-size: clamp(0.58rem, 2.2vw, 0.80rem);
+      letter-spacing: 0.24em;
+      color: rgba(200,185,225,0.50);
+      text-transform: uppercase;
+      margin-bottom: 3rem;
+    }
+
+    /* Coming Soon badge */
+    .badge {
+      display: inline-block;
+      font-size: clamp(0.95rem, 3.2vw, 1.15rem);
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      color: rgba(232,224,240,0.80);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 100px;
+      padding: 0.55rem 1.9rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .platform {
+      font-size: 0.75rem;
+      color: rgba(200,185,225,0.38);
+      letter-spacing: 0.08em;
+    }
+
+    /* ── FOOTER ───────────────────────────────────────────────────────────── */
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.8rem 1rem;
+      font-size: 0.70rem;
+      color: rgba(200,185,225,0.32);
+      z-index: 10;
+      letter-spacing: 0.04em;
+    }
+    footer a {
+      color: rgba(200,185,225,0.46);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    footer a:hover { color: rgba(200,185,225,0.85); }
+  </style>
+</head>
+<body>
+
+<main class="hero">
+
+  <!-- Bomb illustration -->
+  <div class="bomb-wrap">
+    <div class="bomb-aura"></div>
+
+    <svg class="bomb-svg" viewBox="0 0 240 275" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <!-- Bomb body gradient: lighter at top-left highlight, dark at bottom -->
+        <radialGradient id="bodyGrad" cx="36%" cy="30%" r="66%">
+          <stop offset="0%"   stop-color="#3d3d3d"/>
+          <stop offset="55%"  stop-color="#1c1c1c"/>
+          <stop offset="100%" stop-color="#0a0a0a"/>
+        </radialGradient>
+        <!-- Soft specular highlight -->
+        <radialGradient id="hlGrad" cx="30%" cy="25%" r="60%">
+          <stop offset="0%"   stop-color="rgba(255,255,255,0.20)"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,0.00)"/>
+        </radialGradient>
+        <!-- Flame glow filter -->
+        <filter id="fg" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/>
+          <feMerge>
+            <feMergeNode in="b"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+
+      <!-- Wick: curves up and slightly left from the 1-o'clock position -->
+      <path d="M 143 102  Q 168 70  152 40"
+            stroke="#8a7b5a" stroke-width="3.5"
+            fill="none" stroke-linecap="round"/>
+
+      <!-- Flame outer (orange, flickering) -->
+      <g id="flame-outer" filter="url(#fg)">
+        <ellipse cx="148" cy="35" rx="10" ry="16"
+                 fill="rgba(255,130,0,0.88)"/>
+      </g>
+
+      <!-- Flame inner (bright yellow-white core) -->
+      <g id="flame-inner" filter="url(#fg)">
+        <ellipse cx="148" cy="39" rx="5.5" ry="9"
+                 fill="rgba(255,245,140,0.96)"/>
+      </g>
+
+      <!-- Spark tip (tiny bright dot at top of flame) -->
+      <circle id="flame-spark" cx="148" cy="22" r="2.8"
+              fill="rgba(255,255,220,0.95)"/>
+
+      <!-- Bomb body -->
+      <circle cx="114" cy="162" r="90" fill="url(#bodyGrad)"/>
+
+      <!-- Specular highlight (top-left) -->
+      <ellipse cx="86" cy="130" rx="34" ry="22"
+               fill="url(#hlGrad)"
+               transform="rotate(-28 86 130)"/>
+
+      <!-- Subtle bottom rim light (purple-toned, like the game's grid glow) -->
+      <ellipse cx="126" cy="240" rx="44" ry="7"
+               fill="rgba(90,50,140,0.22)"/>
+    </svg>
+  </div>
+
+  <h1 class="game-title">YOU GO BOOM</h1>
+  <p class="game-subtitle">A &nbsp; Trap-Building &nbsp; Puzzle &nbsp; Game</p>
+
+  <span class="badge">Coming Soon to iOS</span>
+  <p class="platform">iPhone &amp; iPad</p>
+
+</main>
+
+<footer>
+  <span>© 2026 Seth Weitberg</span>
+  <span aria-hidden="true">·</span>
+  <a href="/privacy">Privacy Policy</a>
+</footer>
+
+</body>
+</html>
