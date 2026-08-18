@@ -1,8 +1,13 @@
 # yougoboom.app — Static Website
 
-Two pages:
+Three pages:
 - `/` → index.html (landing page)
 - `/privacy` → privacy/index.html (privacy policy)
+- `/support` → support/index.html (support page — this is the URL that goes in the App Store Connect **Support URL** field, which is required)
+
+All three share the same inline CSS, header, and footer. There is no build step and no
+dependencies — Cloudflare Pages serves the files as-is, and `/support/index.html` is
+served at the clean URL `/support` automatically.
 
 ---
 
