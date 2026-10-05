@@ -159,6 +159,22 @@
       letter-spacing: 0.08em;
     }
 
+    /* ── PREVIEW VIDEO ──────────────────────────────────────────────────── */
+    .preview {
+      width: min(880px, 100%);
+      margin-top: 2.6rem;
+    }
+    .preview video {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1600 / 736;
+      border-radius: 14px;
+      background: #0d0a14;
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: 0 0 40px rgba(204,51,0,0.22), 0 10px 40px rgba(0,0,0,0.55);
+    }
+
     /* ── FOOTER ───────────────────────────────────────────────────────────── */
     footer {
       position: fixed;
@@ -312,6 +328,22 @@
 
   <span class="badge">Coming Soon to iOS</span>
   <p class="platform">iPhone &amp; iPad</p>
+
+  <div class="preview">
+    <video src="/media/preview.mp4" poster="/media/preview-poster.jpg"
+           autoplay muted loop playsinline controls preload="metadata"
+           aria-label="YOU GO BOOM gameplay preview"></video>
+  </div>
+  <script>
+    // If autoplay is blocked (e.g. iPhone low-power mode), the first frame is
+    // a black fade-in. Park on the blast frame instead so the still sells it.
+    (function () {
+      var v = document.querySelector('.preview video');
+      v.addEventListener('loadeddata', function () {
+        setTimeout(function () { if (v.paused && v.currentTime < 1) v.currentTime = 14; }, 600);
+      });
+    })();
+  </script>
 
 </main>
 
